@@ -1,5 +1,10 @@
 ;;; ringmod / xor combiner
 
+        equ     m1      %10000000_00000000_00000000
+        equ     m2      %01000000_00000000_00000000
+        equ     m3      %00100000_00000000_00000000
+        equ     m4      %00010000_00000000_00000000
+
         equ     a       reg0
         equ     b       reg1
         equ     prev    reg2
@@ -16,9 +21,9 @@ init:   skp	run,    loop
 loop:
         ;; read pot for delay shift
         clr
-        or      length * 256	        ; delay length into acc aligned to acc[22:8]
+        or      length * 256    ; delay length into acc aligned to acc[22:8]
         mulx	pot1
-        rdfx	dread,  smooth	        ; smooth: (target - current) * C + current
+        rdfx	dread,  smooth  ; smooth: (target - current) * C + current
         wrax	dread,  0
 
         ;; read and store inputs
@@ -28,98 +33,59 @@ loop:
         wrax    b,      0
 
         ;; read pot for bit mask
-        rdax    pot0,   1
-        and	%01110000_00000000_00000000
-        skp	zro,    outthru
-        sof	1,      -0.125
-        skp	zro,    mask1
-        sof	1,      -0.125
-        skp	zro,    mask2
-        sof	1,      -0.125
-        skp	zro,    mask3
-        sof	1,      -0.125
-        skp	zro,    mask4
-        sof	1,      -0.125
-        skp	zro,    mask5
-        sof	1,      -0.125
-        skp	zro,    mask6
-        clr
-        skp	zro,    mask7
+        ldax    pot0
+        sof     1,      -0.2
+        skp	neg,    outa
+        sof	1,      -0.2
+        skp	neg,    mask1
+        sof	1,      -0.2
+        skp	neg,    mask2
+        sof	1,      -0.2
+        skp	neg,    mask3
+        skp	run,    mask4
 
-mask1:  rdax    a,      1
-        and     %10000000_00000000_00000000
+mask1:  ldax    a
+        and     m1
         wrax    a,      0
 
-        rdax    b,      1
-        and     %10000000_00000000_00000000
+        ldax    b
+        and     m1
         wrax    b,      0
 
         skp     run,    mix
 
-mask2:  rdax    a,      1
-        and     %01000000_00000000_00000000
+mask2:  ldax    a
+        and     m2
         wrax    a,      0
 
-        rdax    b,      1
-        and     %01000000_00000000_00000000
+        ldax    b
+        and     m2
         wrax    b,      0
 
         skp     run,    mix
 
-mask3:  rdax    a,      1
-        and     %00100000_00000000_00000000
+mask3:  ldax    a
+        and     m3
         wrax    a,      0
 
-        rdax    b,      1
-        and     %00100000_00000000_00000000
+        ldax    b
+        and     m3
         wrax    b,      0
 
         skp     run,    mix
 
-mask4:  rdax    a,      1
-        and     %00010000_00000000_00000000
+mask4:  ldax    a
+        and     m4
         wrax    a,      0
 
-        rdax    b,      1
-        and     %00010000_00000000_00000000
+        ldax    b
+        and     m4
         wrax    b,      0
 
         skp     run,    mix
 
-mask5:  rdax    a,      1
-        and     %00001000_00000000_00000000
-        wrax    a,      0
-
-        rdax    b,      1
-        and     %00001000_00000000_00000000
-        wrax    b,      0
-
-        skp     run,    mix
-
-mask6:  rdax    a,      1
-        and     %00000100_00000000_00000000
-        wrax    a,      0
-
-        rdax    b,      1
-        and     %00000100_00000000_00000000
-        wrax    b,      0
-
-        skp     run,    mix
-
-mask7:  rdax    a,      1
-        and     %00000010_00000000_00000000
-        wrax    a,      0
-
-        rdax    b,      1
-        and     %00000010_00000000_00000000
-        wrax    b,      0
-
-        skp     run,    mix
 
         ;; prepare output
-outthru:ldax    adcl
-        skp     run,    out
-
 mix:    ldax    a
         skp     zro,    f
 t:      ldax    b
