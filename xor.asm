@@ -22,7 +22,7 @@ loop:
         ;; read pot for delay shift
         clr
         or      length * 256    ; delay length into acc aligned to acc[22:8]
-        mulx	pot1
+        mulx	pot2
         rdfx	dread,  smooth  ; smooth: (target - current) * C + current
         wrax	dread,  0
 
@@ -107,7 +107,7 @@ outprev:ldax    prev
 out:    wrax    prev,   1
         mulx    adcr            ; ringmod with right input
         rdax    prev,   -1
-        mulx    pot2
+        mulx    pot1
         rdax    prev,   1
         wrax    dacl,   -1      ; invert
 echo:   wra	delay,	0
