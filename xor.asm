@@ -1,4 +1,15 @@
-;;; ringmod / xor combiner
+;;; ============================================================================
+;;; bit-rot XOR
+;;; (c) 2012 Sebastian Gutsfeld
+;;;
+;;; OUTL: XOR-based combination of both ins with ring-modulation of right in
+;;; OUTR: left out but inverted and with additional delay
+;;;
+;;; POT0: select applied bitmask before calculating the XOR combination of both
+;;;       ins (0 means no input combination, only left in is sent to out)
+;;; POT1: ring-modulation amount of combined out with right in
+;;; POT2: delay time of right out (0 to 100ms)
+;;; ============================================================================
 
         equ     m1      %10000000_00000000_00000000
         equ     m2      %01000000_00000000_00000000
@@ -10,83 +21,95 @@
         equ     prev    reg2
 
         equ     length  3276
-        equ     smooth  0.0125
+        equ     smooth  0.125
         mem	delay   length
-        equ	dread   reg3
+        equ	del_r   reg3
+
+        equ     pot0flt reg4
+        equ     fpot0   reg5
 
 init:   skp	run,    loop
         clr
-        wrax	dread,  0
-
+        wrax    prev,   0
+        wrax	del_r,  0
+        wrax	pot0flt,0
+        wrax	fpot0,  0
 loop:
-        ;; read pot for delay shift
+
+
+;;; ============================================================================
+;;; read delay length
+;;; ============================================================================
+
         clr
-        or      length * 256    ; delay length into acc aligned to acc[22:8]
+        or      length * 256    ; shift length in acc by 8 bits
         mulx	pot2
-        rdfx	dread,  smooth  ; smooth: (target - current) * C + current
-        wrax	dread,  0
+        mulx	pot2            ; exponential for more fun when mixing both outs
+        rdfx	del_r,  smooth
+        wrax	del_r,  0
 
-        ;; read and store inputs
-        rdax    adcl,   1
-        wrax    a,      0
-        rdax    adcr,   1
-        wrax    b,      0
 
-        ;; read pot for bit mask
+;;; ============================================================================
+;;; select bitmask
+;;; ============================================================================
+
         ldax    pot0
+
+        ;; shelving highpass for faster pot0 response
+        rdfx    pot0flt,0.001
+        wrhx    pot0flt,-0.75
+        rdax    fpot0,  0.75
+        wrax    fpot0,  1
+
+        ;; compensate non-linear pot0 behavior by using different offsets
         sof     1,      -0.2
-        skp	neg,    outa
-        sof	1,      -0.2
+        skp	neg,    outa    ; no bitmask
+        sof	1,      -0.3
         skp	neg,    mask1
-        sof	1,      -0.2
+        sof	1,      -0.28
         skp	neg,    mask2
-        sof	1,      -0.2
+        sof	1,      -0.15
         skp	neg,    mask3
         skp	run,    mask4
 
-mask1:  ldax    a
+mask1:  ldax    adcl
         and     m1
         wrax    a,      0
-
-        ldax    b
+        ldax    adcr
         and     m1
         wrax    b,      0
+        skp     run,    combine
 
-        skp     run,    mix
-
-mask2:  ldax    a
+mask2:  ldax    adcl
         and     m2
         wrax    a,      0
-
-        ldax    b
+        ldax    adcr
         and     m2
         wrax    b,      0
+        skp     run,    combine
 
-        skp     run,    mix
-
-mask3:  ldax    a
+mask3:  ldax    adcl
         and     m3
         wrax    a,      0
-
-        ldax    b
+        ldax    adcr
         and     m3
         wrax    b,      0
+        skp     run,    combine
 
-        skp     run,    mix
-
-mask4:  ldax    a
+mask4:  ldax    adcl
         and     m4
         wrax    a,      0
-
-        ldax    b
+        ldax    adcr
         and     m4
         wrax    b,      0
+        skp     run,    combine
 
-        skp     run,    mix
 
+;;; ============================================================================
+;;; combine inputs
+;;; ============================================================================
 
-        ;; prepare output
-mix:    ldax    a
+combine:ldax    a
         skp     zro,    f
 t:      ldax    b
         skp     zro,    tf
@@ -98,21 +121,26 @@ ft:     skp     run,    outa
 ff:     skp     run,    outb
 
 outa:   ldax    adcl
-        skp     run,    out
+        skp     run,    saveprev
 outb:   ldax    adcr
-        skp     run,    out
+        skp     run,    saveprev
 outprev:ldax    prev
-        skp     run,    out
+        skp     run,    saveprev
+saveprev:
+        wrax    prev,   1
 
-out:    wrax    prev,   1
-        mulx    adcr            ; ringmod with right input
+
+;;; ============================================================================
+;;; output with ring-modulation and delay
+;;; ============================================================================
+
+out:    mulx    adcr            ; ringmod with right in
         rdax    prev,   -1
         mulx    pot1
         rdax    prev,   1
-        wrax    dacl,   -1      ; invert
-echo:   wra	delay,	0
-        rdax	dread,  1
+        wrax    dacl,   -1      ; invert and apply delay on right out
+dly:    wra	delay,	0
+        rdax	del_r,  1
         wrax	addr_ptr, 0
         rmpa	1
         wrax	dacr,	0
-end:
