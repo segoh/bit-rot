@@ -28,6 +28,8 @@
 
         equ     pot0flt reg4
         equ     fpot0   reg5
+        equ     pot1flt reg6
+        equ     fpot1   reg7
 
 init:   skp	run,    loop
         clr
@@ -51,18 +53,28 @@ loop:
 
 
 ;;; ============================================================================
-;;; select bitmask
+;;; shelving highpass for faster pot response
 ;;; ============================================================================
 
         ldax    pot0
-
-        ;; shelving highpass for faster pot0 response
         rdfx    pot0flt,0.001
         wrhx    pot0flt,-0.75
         rdax    fpot0,  0.75
-        wrax    fpot0,  1
+        wrax    fpot0,  0
+
+        ldax    pot1
+        rdfx    pot1flt,0.001
+        wrhx    pot1flt,-0.75
+        rdax    fpot1,  0.75
+        wrax    fpot1,  0
+
+
+;;; ============================================================================
+;;; select bitmask
+;;; ============================================================================
 
         ;; compensate non-linear pot0 behavior by using different offsets
+        ldax    fpot0
         sof     1,      -0.2
         skp	neg,    outa    ; no bitmask
         sof	1,      -0.3
@@ -103,7 +115,6 @@ mask4:  ldax    adcl
         ldax    adcr
         and     m4
         wrax    b,      0
-        skp     run,    combine
 
 
 ;;; ============================================================================
@@ -126,7 +137,6 @@ outa:   ldax    adcl
 outb:   ldax    adcr
         skp     run,    saveprev
 outprev:ldax    prev
-        skp     run,    saveprev
 saveprev:
         wrax    prev,   1
 
@@ -136,8 +146,9 @@ saveprev:
 ;;; ============================================================================
 
 out:    mulx    adcr            ; ringmod with right in
+        sof     1.7,    0
         rdax    prev,   -1
-        mulx    pot1
+        mulx    fpot1
         rdax    prev,   1
         wrax    dacl,   -1      ; invert and apply delay on right out
 dly:    wra	delay,	0
