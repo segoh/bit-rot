@@ -37,6 +37,8 @@ init:   skp	run,    loop
         wrax	del_r,  0
         wrax	pot0flt,0
         wrax	fpot0,  0
+        wrax	pot1flt,0
+        wrax	fpot1,  0
 loop:
 
 
