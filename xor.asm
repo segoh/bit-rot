@@ -114,7 +114,6 @@ mask4:  ldax    adcl
         ldax    adcr
         and     m4
         wrax    b,      0
-        skp     run,    combine
 
 
 ;;; ============================================================================
@@ -137,7 +136,6 @@ outa:   ldax    adcl
 outb:   ldax    adcr
         skp     run,    saveprev
 outprev:ldax    prev
-        skp     run,    saveprev
 saveprev:
         wrax    prev,   1
 
