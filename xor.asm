@@ -135,6 +135,7 @@ saveprev:
 ;;; ============================================================================
 
 out:    mulx    adcr            ; ringmod with right in
+        sof     1.7,    0
         rdax    prev,   -1
         mulx    pot1
         rdax    prev,   1
