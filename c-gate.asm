@@ -2,7 +2,7 @@
 ;;; bit-rot C-GATE
 ;;; (c) 2012 Sebastian Gutsfeld
 ;;;
-;;; OUTL: Muller C-gate-based combination of both ins with ring-modulation of
+;;; OUTL: Muller C-gate-based combination of both ins with ring-modulation by
 ;;;       right in
 ;;; OUTR: left out but inverted and with additional delay
 ;;;

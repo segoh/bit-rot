@@ -2,7 +2,7 @@
 ;;; bit-rot XOR
 ;;; (c) 2012 Sebastian Gutsfeld
 ;;;
-;;; OUTL: XOR-based combination of both ins with ring-modulation of right in
+;;; OUTL: XOR-based combination of both ins with ring-modulation by right in
 ;;; OUTR: left out but inverted and with additional delay
 ;;;
 ;;; POT0: select applied bitmask before calculating the XOR combination of both
