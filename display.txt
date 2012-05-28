@@ -1,0 +1,10 @@
+000> INTERLEAVE L/R     bit-rot   rmod-r   dly-r
+001> XOR                bit-rot   rmod-r   dly-r
+010> MIX                bit-rot   rmod-r   dly-r
+011> MIN                bit-rot   rmod-r   dly-r
+100> INTERLEAVE MIX/L/R bit-rot   rmod-r   dly-r
+101> C-GATE             bit-rot   rmod-r   dly-r
+110> POS/NEG            bit-rot   rmod-r   dly-r
+111> MAX                bit-rot   rmod-r   dly-r
+_______ BIT-ROT ________         segoh          
+  waveform-combination    and bit-manipulation  
